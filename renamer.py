@@ -1,5 +1,6 @@
 import hashlib
 import re
+import os
 
 def main():
     print('main')
@@ -12,6 +13,17 @@ def file_match(filename, filefilter):
         return False if s is None else True
     except Exception as e:
         print(e)
+
+def change_filename(old_filepath, new_filepath):
+    try:
+        os.rename(old_filepath, new_filepath)
+        return True
+    except OSError as oe:
+        print(oe)
+        return False
+    except Exception as e:
+        print(e)
+        return False
 
 # Gets checksum from a file
 def get_hash(file):

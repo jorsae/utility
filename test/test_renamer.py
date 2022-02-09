@@ -42,7 +42,23 @@ def create_files_get_hash():
     os.remove(f'{main_folder}test1.txt')
     os.remove(f'{main_folder}test2.txt')
 
-def test_tt(create_files_get_hash):
+def test_get_hash(create_files_get_hash):
     main_folder = 'test/test_renamer_data/'
     assert(renamer.get_hash(f'{main_folder}test1.txt') == 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
     assert(renamer.get_hash(f'{main_folder}test2.txt') == '02622b86c2f672e95809b6f51d214afe6276710a9a8fc1ba1e4e5f17ec061c5b')
+
+@pytest.fixture
+def create_file_change_filename():
+    main_folder = 'test/test_renamer_data/'
+
+    if not os.path.exists(f'{main_folder}start.txt'):
+        open(f'{main_folder}start.txt', 'w').close()
+    yield
+
+    os.remove(f'{main_folder}end.txt')
+
+def test_change_filename(create_file_change_filename):
+    main_folder = 'test/test_renamer_data/'
+
+    changed = renamer.change_filename(f'{main_folder}start.txt', f'{main_folder}end.txt')
+    assert(changed) == True

@@ -10,6 +10,9 @@ import renamer
     ('d¨1', '¨1', True),
     ('3t32feqwgq32', '32feqq', False),
     ('abc', 'abcd', False),
+    ('abcd', '', True),
+    ('abcd', None, True),
+    ('', None, True),
 ])
 def test_file_match(filename, filefilter, expected):
     assert(renamer.file_match(filename, filefilter)) == expected
@@ -62,3 +65,13 @@ def test_change_filename(create_file_change_filename):
 
     changed = renamer.change_filename(f'{main_folder}start.txt', f'{main_folder}end.txt')
     assert(changed) == True
+
+@pytest.mark.parametrize("filepath, filetypes, expected", [
+    ('/a/bin/a.txt', ['*'], True),
+    ('/a/bin/a.txt', ['.png', '.pdf', '.txt'], True),
+    ('/a/bin/a.txt', ['.png', '.pdf'], False),
+    ('/a/bin/a.madethisshitup', ['.png', '.pdf'], False),
+    (r'/a\asds\das\da\sd\asd\a.da/bin/a.madethisshitup', ['.png', '.madethisshitup'], True),
+])
+def test_check_extension(filepath, filetypes, expected):
+    assert(renamer.check_filetype(filepath, filetypes)) == expected

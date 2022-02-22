@@ -75,3 +75,13 @@ def test_change_filename(create_file_change_filename):
 ])
 def test_check_extension(filepath, filetypes, expected):
     assert(renamer.check_filetype(filepath, filetypes)) == expected
+
+@pytest.mark.parametrize("folder, expected", [
+    ('/test', '/home/sandrathefox/Code/utility/test'),
+    ('test', '/home/sandrathefox/Code/utility/test'),
+    ('/home/sandrathefox/Code/utility/test', '/home/sandrathefox/Code/utility/test'),
+    ('test/test_renamer_data', '/home/sandrathefox/Code/utility/test/test_renamer_data'),
+    ('../utility/test', '/home/sandrathefox/Code/utility/../utility/test'),
+])
+def test_check_extension(folder, expected):
+    assert(renamer.check_folder(folder)) == expected

@@ -7,12 +7,16 @@ folder_searched = []
 
 def main():
     print('main')
+    print(check_folder('/test'))
+    path = '/test'
+    # root = f'{os.getcwd()}{path}' # Ensure it's absolute path
+    # get_files(root, True, None, '.*')
 
 # Gets all files that matches filefilter
 def get_files(root, recursive, filefilter, filetype):
-    root = f'{os.getcwd()}{root}\\' # Ensure it's absolute path
+    print(f'{root=}')
     files = []
-    folder_searched.append(start_folder)
+    folder_searched.append(root)
 
     for file in os.listdir(root):
         filepath = f'{root}{file}'
@@ -24,6 +28,7 @@ def get_files(root, recursive, filefilter, filetype):
                 print(f'extend: {filepath}')
                 files.extend(get_files(root, recursive, filefilter, filetype))
         else:
+            print(f'{filepath=}')
             if check_filetype(filepath, filetype):
                 pass
 
@@ -38,6 +43,15 @@ def file_match(filename, filefilter):
     except Exception as e:
         print(e)
         return False
+
+# Checks the folder input from user input
+def check_folder(folder):
+    if folder.startswith('/') is False:
+        folder = f'/{folder}'
+    
+    if folder.startswith(os.getcwd()) is False:
+        return f'{os.getcwd()}{folder}'
+    return folder
 
 # Checks the file extension to the filetype filter
 def check_filetype(filepath, filetypes):

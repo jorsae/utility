@@ -7,10 +7,9 @@ folder_searched = []
 
 def main():
     print('main')
-    print(check_folder('/test'))
-    path = '/test'
-    # root = f'{os.getcwd()}{path}' # Ensure it's absolute path
-    # get_files(root, True, None, '.*')
+    path = '/utility'
+    files = get_files(check_folder(path), True, None, ['*'])
+    print(f'{files=}')
 
 # Gets all files that matches filefilter
 def get_files(root, recursive, filefilter, filetype):
@@ -19,18 +18,23 @@ def get_files(root, recursive, filefilter, filetype):
     folder_searched.append(root)
 
     for file in os.listdir(root):
-        filepath = f'{root}{file}'
+        filepath = f'{root}/{file}'
 
+        print(f'{folder_searched=}')
+        print(f'{filepath=}')
         if os.path.isdir(filepath):
+            print('isdir')
             if recursive is False:
                 continue
             if filepath not in folder_searched:
                 print(f'extend: {filepath}')
-                files.extend(get_files(root, recursive, filefilter, filetype))
+                files.extend(get_files(f'{filepath}', recursive, filefilter, filetype))
         else:
-            print(f'{filepath=}')
+            print(f'not dir: {filepath}')
             if check_filetype(filepath, filetype):
-                pass
+                if file_match(filepath, filefilter):
+                    files.append(filepath)
+        return filepath
 
 
 # Matches filename to filefilter using regex

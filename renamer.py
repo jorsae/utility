@@ -7,34 +7,38 @@ folder_searched = []
 
 def main():
     print('main')
-    path = '/utility'
-    files = get_files(check_folder(path), True, None, ['*'])
+    path = os.path.abspath('/home/sandrathefox')
+
+    files = get_files(path, True, None, ['.jpg'])
     print(f'{files=}')
 
 # Gets all files that matches filefilter
 def get_files(root, recursive, filefilter, filetype):
-    print(f'{root=}')
+    print(f'{root=} | {len(os.listdir(root))}')
     files = []
     folder_searched.append(root)
 
     for file in os.listdir(root):
         filepath = f'{root}/{file}'
 
-        print(f'{folder_searched=}')
-        print(f'{filepath=}')
+        #print(f'{folder_searched=}')
+        #print(f'{filepath=}')
         if os.path.isdir(filepath):
-            print('isdir')
+            print(f'isdir: {filepath}')
             if recursive is False:
                 continue
             if filepath not in folder_searched:
                 print(f'extend: {filepath}')
                 files.extend(get_files(f'{filepath}', recursive, filefilter, filetype))
+            else:
+                print(f'in f_searched: {filepath}')
         else:
-            print(f'not dir: {filepath}')
+            #print(f'not dir: {filepath}')
             if check_filetype(filepath, filetype):
                 if file_match(filepath, filefilter):
+                    #print(f'added: {filepath}')
                     files.append(filepath)
-        return filepath
+    return files
 
 
 # Matches filename to filefilter using regex
@@ -48,6 +52,7 @@ def file_match(filename, filefilter):
         print(e)
         return False
 
+# TODO: Probably not needed. Can just use os.path.abspath
 # Checks the folder input from user input
 def check_folder(folder):
     if folder.startswith('/') is False:

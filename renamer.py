@@ -1,16 +1,23 @@
 import hashlib
 import re
 import os
+import pytest
 
 folder_searched = []
 
 
 def main():
     print('main')
-    path = os.path.abspath('/home/sandrathefox')
+    #path = os.path.abspath('/home/sandrathefox')
 
-    files = get_files(path, True, None, ['.jpg'])
+    #files = get_files(path, True, None, ['.jpg'])
+    #print(f'{files=}')
+
+    files = get_files('test/test_renamer_data', True, None, ['.jpg', '.mp3'])
     print(f'{files=}')
+    #ft = check_filetype('test/test_renamer_data/folder/var.mp3', ['.mp3'])
+    #print(ft)
+    
 
 # Gets all files that matches filefilter
 def get_files(root, recursive, filefilter, filetype):
@@ -20,6 +27,7 @@ def get_files(root, recursive, filefilter, filetype):
 
     for file in os.listdir(root):
         filepath = f'{root}/{file}'
+        print(f'file: {filepath}')
 
         #print(f'{folder_searched=}')
         #print(f'{filepath=}')
@@ -32,6 +40,7 @@ def get_files(root, recursive, filefilter, filetype):
                 files.extend(get_files(f'{filepath}', recursive, filefilter, filetype))
             else:
                 print(f'in f_searched: {filepath}')
+                print(f'{folder_searched=}')
         else:
             #print(f'not dir: {filepath}')
             if check_filetype(filepath, filetype):

@@ -128,3 +128,9 @@ def test_get_files(recursive, filefilter, filetype, expected, create_files_get_f
     files = renamer.get_files('test/test_renamer_data', recursive, filefilter, filetype)
     assert(files) == expected
     renamer.folder_searched.clear()
+
+@pytest.mark.parametrize("old_filepath, replace_pattern, pattern, index, expected", [
+    ('/a/lama til en ku.mp3', ' ', '?', 0, '/a/lama?til?en?ku.mp3'),
+])  
+def test_get_new_filename(old_filepath, replace_pattern, pattern, index, expected):
+    assert(renamer.get_new_filename(old_filepath, replace_pattern, pattern, index)) == expected

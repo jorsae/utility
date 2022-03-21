@@ -13,11 +13,12 @@ def main():
     #files = get_files(path, True, None, ['.jpg'])
     #print(f'{files=}')
 
-    files = get_files('test/test_renamer_data', True, None, ['.jpg', '.mp3'])
-    print(f'{files=}')
+    a = get_new_filename('a/lama til en ku.mp3', ' ', '?', 0)
+    print(a)
+    # files = get_files('test/test_renamer_data', True, None, ['.jpg', '.mp3'])
+    # print(f'{files=}')
     #ft = check_filetype('test/test_renamer_data/folder/var.mp3', ['.mp3'])
     #print(ft)
-    
 
 # Gets all files that matches filefilter
 def get_files(root, recursive, filefilter, filetype):
@@ -49,7 +50,6 @@ def get_files(root, recursive, filefilter, filetype):
                     files.append(filepath)
     return files
 
-
 # Matches filename to filefilter using regex
 def file_match(filename, filefilter):
     if filefilter is None:
@@ -60,6 +60,17 @@ def file_match(filename, filefilter):
     except Exception as e:
         print(e)
         return False
+
+def get_new_filename(old_filepath, replace_pattern, pattern, index):
+    extension = os.path.splitext(old_filepath)[1]
+    filename = os.path.basename(old_filepath)
+    filename = filename[0:-len(extension)]
+    path = os.path.dirname(old_filepath)
+    print(f'{filename=}, {extension=}')
+    new_filename = re.sub(replace_pattern, pattern, filename)
+    print(f'{new_filename=}')
+    return f'{path}/{new_filename}{extension}'
+
 
 # Checks the file extension to the filetype filter
 def check_filetype(filepath, filetypes):

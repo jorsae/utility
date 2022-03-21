@@ -61,16 +61,6 @@ def file_match(filename, filefilter):
         print(e)
         return False
 
-# TODO: Probably not needed. Can just use os.path.abspath
-# Checks the folder input from user input
-def check_folder(folder):
-    if folder.startswith('/') is False:
-        folder = f'/{folder}'
-    
-    if folder.startswith(os.getcwd()) is False:
-        return f'{os.getcwd()}{folder}'
-    return folder
-
 # Checks the file extension to the filetype filter
 def check_filetype(filepath, filetypes):
     filetype = os.path.splitext(filepath)[1]

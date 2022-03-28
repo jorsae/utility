@@ -103,7 +103,7 @@ def create_files_get_files():
     create_file('folder/bar.txt')
     create_file('folder/var.mp3')
 
-    yield
+    yield   
     
     delete_file('foo.txt')
     delete_file('foo.jpg')
@@ -130,7 +130,9 @@ def test_get_files(recursive, filefilter, filetype, expected, create_files_get_f
     renamer.folder_searched.clear()
 
 @pytest.mark.parametrize("old_filepath, replace_pattern, pattern, index, expected", [
-    ('/a/lama til en ku.mp3', ' ', '?', 0, '/a/lama?til?en?ku.mp3'),
+    ('/a/lama til en ku.mp3', ' ', '!', 0, '/a/lama!til!en!ku.mp3'),
+    
+    ('/a/asd.mp3', '.+', '???', 0, '/a/000.mp3'),
 ])  
 def test_get_new_filename(old_filepath, replace_pattern, pattern, index, expected):
     assert(renamer.get_new_filename(old_filepath, replace_pattern, pattern, index)) == expected

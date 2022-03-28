@@ -67,10 +67,28 @@ def get_new_filename(old_filepath, replace_pattern, pattern, index):
     filename = filename[0:-len(extension)]
     path = os.path.dirname(old_filepath)
     print(f'{filename=}, {extension=}')
+    
+    pattern = filename_increment(pattern, index)
     new_filename = re.sub(replace_pattern, pattern, filename)
+
     print(f'{new_filename=}')
     return f'{path}/{new_filename}{extension}'
 
+# Replaces ? in args.pattern and replaces it with incremental numbers, 0-padded for each ?
+def filename_increment(filename, index):
+    digits = filename.count('?')
+    if digits <= 0:
+        return filename
+
+    loc = filename.find('?')
+    padding = digits - len(str(index))
+    index_num = index
+    if padding > 0:
+        index_num = f'{"0" * padding}{index}'
+
+    filename = f'{filename[:loc]}{index_num}{filename[loc:]}'
+    filename = filename.replace('?', '')
+    return filename
 
 # Checks the file extension to the filetype filter
 def check_filetype(filepath, filetypes):

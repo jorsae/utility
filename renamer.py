@@ -20,7 +20,6 @@ folder_searched = []
 
 """
     TODO:
-        Rename variables to new better names, based on ArgumentParser
         Add CHECKS for argument parser
 """
 
@@ -29,7 +28,7 @@ def main():
     args = parse_arguments()
     print(f'{args}')
 
-    files = get_files(args.root, args.recursive, args.find, args.filetype)
+    files = get_files(args.root, args.recursive, args.filename, args.filetype)
     print(files)
     # def get_new_filename(old_filepath, replace_pattern, pattern, index):
     # def change_filename(old_filepath, new_filepath):
@@ -54,62 +53,57 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', '-r', type=str, help='Root directory to start search')
     parser.add_argument('--recursive', '-R', action='store_true', help='File search is recursive')
-    parser.add_argument('--filename', '-f', type=str, help='Search filter based on filename')
-    parser.add_argument('--filetype', '-F', type=str, help='Search filter based on filetype')
+    parser.add_argument('--filename', '-f', type=str, default='.+' help='Search filter based on filename')
+    parser.add_argument('--filetype', '-F', type=str, default="*", help='Search filter based on filetype')
     parser.add_argument('--find', '-fi', type=str, help='Search pattern in filename we replace')
     parser.add_argument('--replace', '-rep', type=str, help='Pattern for new filename')
     
     parser.add_argument('--hash', '-H', action='store_true', help='Recovery file stores checksum')
-    
     parser.add_argument('--recover', type=str, help='Recover from recovery file')
 
-    args = parser.parse_args()
+    return clean_arguments(args)
 
-    args.filetype = args.filetype.split()
+def clean_arguments(args):
+    if args.recover:
+        print(f'Recovery mode: {args.recover}')
+        print('TODO: write recovery mode')
+        os.kill()
+    
+    if args.filetype:
+        args.filetype = args.filetype.split()
+    
     return args
 
-# Gets all files that matches filefilter
-def get_files(root, recursive, filefilter, filetype):
-    print(f'{root=} | {len(os.listdir(root))}')
+# Gets all files that matches filename & filetypes
+def get_files(root, recursive, filename, filetypes):
     files = []
     folder_searched.append(root)
 
     for file in os.listdir(root):
         filepath = f'{root}/{file}'
-        print(f'file: {filepath}')
-
-        #print(f'{folder_searched=}')
-        #print(f'{filepath=}')
         if os.path.isdir(filepath):
-            print(f'isdir: {filepath}')
             if recursive is False:
                 continue
             if filepath not in folder_searched:
-                print(f'extend: {filepath}')
-                files.extend(get_files(f'{filepath}', recursive, filefilter, filetype))
-            else:
-                print(f'in f_searched: {filepath}')
-                print(f'{folder_searched=}')
+                files.extend(get_files(f'{filepath}', recursive, filename, filetypes))
         else:
-            #print(f'not dir: {filepath}')
-            if check_filetype(filepath, filetype):
-                if file_match(filepath, filefilter):
-                    #print(f'added: {filepath}')
+            if check_filetype(filepath, filetypes):
+                if file_match(filepath, filename):
                     files.append(filepath)
     return files
 
-# Matches filename to filefilter using regex
-def file_match(filename, filefilter):
-    if filefilter is None:
+# Checks if filename is in filepath
+def file_match(filepath, filename):
+    if filename is None:
         return True
     try:
-        s = re.search(filefilter, filename)
+        s = re.search(filename, filepath)
         return False if s is None else True
     except Exception as e:
         print(e)
         return False
 
-# Checks the file extension to the filetype filter
+# Checks the filepath's filetype is in filetypes
 def check_filetype(filepath, filetypes):
     filetype = os.path.splitext(filepath)[1]
     if filetypes == ['*']:

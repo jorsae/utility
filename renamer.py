@@ -20,8 +20,7 @@ folder_searched = []
         recover: parses recovery file and undo everything that's been done
     
     TODO:
-        Recovery mode should check checksum if applicable.
-        Recovery mode should display successful recovered/total file changes
+        Add more options
 """
 
 class FileChange():

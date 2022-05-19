@@ -21,6 +21,7 @@ folder_searched = []
     
     TODO:
         Add more options
+        Add option for re.IGNORECASE
 """
 
 class FileChange():
@@ -142,7 +143,7 @@ def clean_arguments(args):
         recover(args.recover)
         sys.exit()
     
-    if is_arg_empty(args.root) or is_arg_empty(args.find) or is_arg_empty(args.replace):
+    if is_arg_empty(args.root) or is_arg_empty(args.find) or args.replace is None:
         print(f'root, find and replace is required.\nExiting..')
         sys.exit()
 

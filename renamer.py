@@ -78,6 +78,31 @@ def main():
     FileChange.create_recovery_file(args, changes)
     print(f'Finished')
 
+def recover(recovery_file):
+    print(f'Recover from file: {recovery_file}')
+    print('Parsing recovery file')
+    
+    file_changes = parse_recovery_file(recovery_file)
+    print(f'Found {len(file_changes)} file changes')
+
+    for fc in file_changes:
+        changes = change_filename(fc.filepath, fc.old_filepath, True)
+        print(changes)
+
+# Parses a recovery file
+def parse_recovery_file(recovery_file):
+    try:
+        with open(recovery_file) as f:
+            data = json.loads(f.read())
+        
+        file_changes = []
+        file_changes_data = data.get("file_changes")
+        for fc in file_changes_data:
+            file_changes.append(FileChange(fc['filepath'], fc['old_filepath'], fc['checksum']))
+        return file_changes
+    except Exception as e:
+        print(e)
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', '-r', default='.', type=str, help='Root directory to start search')
@@ -95,8 +120,7 @@ def parse_arguments():
 
 def clean_arguments(args):
     if args.recover:
-        print(f'Recovery mode: {args.recover}')
-        print('TODO: write recovery mode')
+        recover(args.recover)
         sys.exit()
     
     if is_arg_empty(args.root) or is_arg_empty(args.find) or is_arg_empty(args.replace):

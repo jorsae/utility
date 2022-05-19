@@ -20,7 +20,8 @@ folder_searched = []
         recover: parses recovery file and undo everything that's been done
     
     TODO:
-        Add CHECKS for argument parser
+        Recovery mode should check checksum if applicable.
+        Recovery mode should display successful recovered/total file changes
 """
 
 class FileChange():
@@ -53,7 +54,26 @@ class FileChange():
         }
         try:
             json_data = json.dumps(save_data, ensure_ascii=False, indent=4)
-            with open('recovery.json', 'w') as f:
+            json_file = get_json_filename('recovery')
+            with open(json_file, 'w') as f:
+                f.write(json_data)
+        except Exception as e:
+            print(e)
+    
+    @staticmethod
+    def create_recovery_log(failed_recovery):
+        if len(failed_recovery) <= 0:
+            print('No changes made')
+            return
+        print(failed_recovery)
+        
+        save_data = {
+            'failed_recovery': [obj.to_dict() for obj in failed_recovery]
+        }
+        try:
+            json_data = json.dumps(save_data, ensure_ascii=False, indent=4)
+            json_file = get_json_filename('failed_recovery')
+            with open(json_file, 'w') as f:
                 f.write(json_data)
         except Exception as e:
             print(e)
@@ -84,10 +104,10 @@ def recover(recovery_file):
     
     file_changes = parse_recovery_file(recovery_file)
     print(f'Found {len(file_changes)} file changes')
-
-    for fc in file_changes:
-        changes = change_filename(fc.filepath, fc.old_filepath, True)
-        print(changes)
+    success, failed, failed_recovery = recover_filenames(file_changes)
+    print(f'Successfully recovered {success}')
+    print(f'Failed to recover: {failed}')
+    FileChange.create_recovery_log(failed_recovery)
 
 # Parses a recovery file
 def parse_recovery_file(recovery_file):
@@ -213,6 +233,25 @@ def change_filename(old_filepath, new_filepath, hash):
         print(e)
         return False
 
+def recover_filenames(file_changes):
+    success = 0
+    failed = 0
+    failed_recovery = []
+    for fc in file_changes:
+        try:
+            if fc.checksum:
+                checksum = get_hash(fc.filepath)
+                if fc.checksum != checksum:
+                    failed += 1
+                    failed_recovery.append(fc)
+            os.rename(fc.filepath, fc.old_filepath)
+            success += 1
+        except OSError as oe:
+            print(oe)
+        except Exception as e:
+            print(e)
+    return success, failed, failed_recovery
+
 # Gets checksum from a file
 def get_hash(filename):
     sha256 = hashlib.sha256()
@@ -224,6 +263,18 @@ def get_hash(filename):
             sha256.update(data)
     return sha256.hexdigest()
 
+# Gets .json filename
+def get_json_filename(filename):
+    print(f'{filename=}')
+    if os.path.exists(f'{filename}.json') is False:
+        return f'{filename}.json'
+    
+    i = 0
+    while os.path.exists(f'{filename}{str(i)}.json'):
+        i += 1
+    return f'{filename}{str(i)}.json'
+
+# Checks if argument is empty
 def is_arg_empty(value):
     if value is None or value == '':
         return True

@@ -1,6 +1,7 @@
 import argparse
 import hashlib
 import re
+import sys
 import os
 import pytest
 
@@ -51,9 +52,9 @@ def main():
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--root', '-r', type=str, help='Root directory to start search')
+    parser.add_argument('--root', '-r', default='.', type=str, help='Root directory to start search')
     parser.add_argument('--recursive', '-R', action='store_true', help='File search is recursive')
-    parser.add_argument('--filename', '-f', type=str, default='.+' help='Search filter based on filename')
+    parser.add_argument('--filename', '-f', type=str, default='.+', help='Search filter based on filename')
     parser.add_argument('--filetype', '-F', type=str, default="*", help='Search filter based on filetype')
     parser.add_argument('--find', '-fi', type=str, help='Search pattern in filename we replace')
     parser.add_argument('--replace', '-rep', type=str, help='Pattern for new filename')
@@ -61,17 +62,24 @@ def parse_arguments():
     parser.add_argument('--hash', '-H', action='store_true', help='Recovery file stores checksum')
     parser.add_argument('--recover', type=str, help='Recover from recovery file')
 
+    args = parser.parse_args()
     return clean_arguments(args)
 
 def clean_arguments(args):
+    print(args)
     if args.recover:
         print(f'Recovery mode: {args.recover}')
         print('TODO: write recovery mode')
-        os.kill()
+        sys.exit()
     
+    if is_arg_empty(args.root) or is_arg_empty(args.find) or is_arg_empty(args.replace):
+        print(f'root, find and replace is required.\nExiting..')
+        sys.exit()
+
     if args.filetype:
         args.filetype = args.filetype.split()
     
+    print(args)
     return args
 
 # Gets all files that matches filename & filetypes
@@ -161,6 +169,11 @@ def get_hash(file):
                 break
             sha256.update(data)
     return sha256.hexdigest()
+
+def is_arg_empty(value):
+    if value is None or value == '':
+        return True
+    return False
 
 if __name__ == '__main__':
     main()

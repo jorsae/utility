@@ -4,6 +4,7 @@ import re
 import sys
 import os
 import pytest
+import json
 
 folder_searched = []
 """
@@ -17,38 +18,65 @@ folder_searched = []
         hash: recovery file will store checksum of the file
 
         recover: parses recovery file and undo everything that's been done
-"""
-
-"""
+    
     TODO:
         Add CHECKS for argument parser
 """
 
+class FileChange():
+    def __init__(self, filepath, old_filepath, checksum):
+        self.filepath = filepath
+        self.old_filepath = old_filepath
+        self.checksum = checksum
+    
+    def __str__(self):
+        return f'{self.filepath} - {self.old_filepath} | {self.checksum}'
+
+    def to_dict(self):
+        return { 'filepath': self.filepath, 'old_filepath': self.old_filepath, 'checksum': self.checksum }
+    
+    # Creates a json file to restore changes made
+    @staticmethod
+    def create_recovery_file(args, file_changes):
+        if len(file_changes) <= 0:
+            print('No changes made')
+            return
+
+        save_data = {
+            'root': args.root,
+            'recursive': args.recursive,
+            'filename': args.filename,
+            'filetype': ' '.join(args.filetype),
+            'find': args.find,
+            'replace': args.replace,
+            'file_changes': [obj.to_dict() for obj in file_changes]
+        }
+        try:
+            json_data = json.dumps(save_data, ensure_ascii=False, indent=4)
+            with open('recovery.json', 'w') as f:
+                f.write(json_data)
+        except Exception as e:
+            print(e)
+
 def main():
-    print('main')
     args = parse_arguments()
+
+    print(f'Running renamer.py with')
     print(f'{args}')
-
+    print(f'Fetching files..')
     files = get_files(args.root, args.recursive, args.filename, args.filetype)
-    print(files)
-    # def get_new_filename(old_filepath, replace_pattern, pattern, index):
-    # def change_filename(old_filepath, new_filepath):
-    for file in files:
-        new_name = get_new_filename(file, args.find, args.replace, 0)
-        print(f'{new_name=}')
-        change_filename(file, new_name)
-
-    #path = os.path.abspath('/home/sandrathefox')
-
-    #files = get_files(path, True, None, ['.jpg'])
-    #print(f'{files=}')
-
-    # a = get_new_filename('a/lama til en ku.mp3', ' ', '?', 0)
-    # print(a)
-    # files = get_files('test/test_renamer_data', True, None, ['.jpg', '.mp3'])
-    # print(f'{files=}')
-    #ft = check_filetype('test/test_renamer_data/folder/var.mp3', ['.mp3'])
-    #print(ft)
+    print(f'Found {len(files)} files')
+    
+    changes = []
+    for filename in files:
+        new_name = get_new_filename(filename, args.find, args.replace, 0)
+        change = change_filename(filename, new_name, args.hash)
+        if change:
+            changes.append(change)
+    print(f'Made: {len(changes)} changes')
+    print(f'Creating recovery file..')
+    FileChange.create_recovery_file(args, changes)
+    print(f'Finished')
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -59,14 +87,13 @@ def parse_arguments():
     parser.add_argument('--find', '-fi', type=str, help='Search pattern in filename we replace')
     parser.add_argument('--replace', '-rep', type=str, help='Pattern for new filename')
     
-    parser.add_argument('--hash', '-H', action='store_true', help='Recovery file stores checksum')
+    parser.add_argument('--hash', '-H', action='store_false', default=True, help='Recovery file stores checksum')
     parser.add_argument('--recover', type=str, help='Recover from recovery file')
 
     args = parser.parse_args()
     return clean_arguments(args)
 
 def clean_arguments(args):
-    print(args)
     if args.recover:
         print(f'Recovery mode: {args.recover}')
         print('TODO: write recovery mode')
@@ -79,7 +106,6 @@ def clean_arguments(args):
     if args.filetype:
         args.filetype = args.filetype.split()
     
-    print(args)
     return args
 
 # Gets all files that matches filename & filetypes
@@ -123,12 +149,10 @@ def get_new_filename(old_filepath, replace_pattern, pattern, index):
     filename = os.path.basename(old_filepath)
     filename = filename[0:-len(extension)]
     path = os.path.dirname(old_filepath)
-    print(f'{filename=}, {extension=}')
     
     pattern = filename_increment(pattern, index)
     new_filename = re.sub(replace_pattern, pattern, filename)
 
-    print(f'{new_filename=}')
     return f'{path}/{new_filename}{extension}'
 
 # Replaces ? in args.pattern and replaces it with incremental numbers, 0-padded for each ?
@@ -148,10 +172,16 @@ def filename_increment(filename, index):
     return filename
 
 # Changes filename
-def change_filename(old_filepath, new_filepath):
+def change_filename(old_filepath, new_filepath, hash):
+    if old_filepath == new_filepath:
+        return
     try:
         os.rename(old_filepath, new_filepath)
-        return True
+        checksum = None
+        if hash:
+            checksum = get_hash(new_filepath)
+        
+        return FileChange(new_filepath, old_filepath, checksum)
     except OSError as oe:
         print(oe)
         return False
@@ -160,9 +190,9 @@ def change_filename(old_filepath, new_filepath):
         return False
 
 # Gets checksum from a file
-def get_hash(file):
+def get_hash(filename):
     sha256 = hashlib.sha256()
-    with open(file, 'rb') as f:
+    with open(filename, 'rb') as f:
         while True:
             data = f.read(65536)
             if not data:

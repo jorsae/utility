@@ -24,6 +24,8 @@ folder_searched = []
         Add option for re.IGNORECASE
 """
 
+""" ***** CLASSES ***** """
+# FileChange class, holds all data for a file change
 class FileChange():
     def __init__(self, filepath, old_filepath, checksum):
         self.filepath = filepath
@@ -78,6 +80,46 @@ class FileChange():
         except Exception as e:
             print(e)
 
+""" ***** ARGUMENTS ***** """
+# Parsing args
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--root', '-r', default='.', type=str, help='Root directory to start search')
+    parser.add_argument('--recursive', '-R', action='store_true', help='File search is recursive')
+    parser.add_argument('--filename', '-f', type=str, default='.+', help='Search filter based on filename')
+    parser.add_argument('--filetype', '-F', type=str, default="*", help='Search filter based on filetype')
+    parser.add_argument('--find', '-fi', type=str, help='Search pattern in filename we replace')
+    parser.add_argument('--replace', '-rep', type=str, help='Pattern for new filename')
+    
+    parser.add_argument('--hash', '-H', action='store_false', default=True, help='Recovery file stores checksum')
+    parser.add_argument('--recover', type=str, help='Recover from recovery file')
+
+    args = parser.parse_args()
+    return clean_arguments(args)
+
+# Clean arguments
+def clean_arguments(args):
+    if args.recover:
+        recover(args.recover)
+        sys.exit()
+    
+    if is_arg_empty(args.root) or is_arg_empty(args.find) or args.replace is None:
+        print(f'root, find and replace is required.\nExiting..')
+        sys.exit()
+
+    if args.filetype:
+        args.filetype = args.filetype.split()
+    
+    return args
+
+# Checks if argument is empty
+def is_arg_empty(value):
+    if value is None or value == '':
+        return True
+    return False
+
+""" ***** MAIN ***** """
+# Main
 def main():
     args = parse_arguments()
 
@@ -98,60 +140,6 @@ def main():
     FileChange.create_recovery_file(args, changes)
     print(f'Finished')
 
-def recover(recovery_file):
-    print(f'Recover from file: {recovery_file}')
-    print('Parsing recovery file')
-    
-    file_changes = parse_recovery_file(recovery_file)
-    print(f'Found {len(file_changes)} file changes')
-    success, failed, failed_recovery = recover_filenames(file_changes)
-    print(f'Successfully recovered {success}')
-    print(f'Failed to recover: {failed}')
-    FileChange.create_recovery_log(failed_recovery)
-
-# Parses a recovery file
-def parse_recovery_file(recovery_file):
-    try:
-        with open(recovery_file) as f:
-            data = json.loads(f.read())
-        
-        file_changes = []
-        file_changes_data = data.get("file_changes")
-        for fc in file_changes_data:
-            file_changes.append(FileChange(fc['filepath'], fc['old_filepath'], fc['checksum']))
-        return file_changes
-    except Exception as e:
-        print(e)
-
-def parse_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--root', '-r', default='.', type=str, help='Root directory to start search')
-    parser.add_argument('--recursive', '-R', action='store_true', help='File search is recursive')
-    parser.add_argument('--filename', '-f', type=str, default='.+', help='Search filter based on filename')
-    parser.add_argument('--filetype', '-F', type=str, default="*", help='Search filter based on filetype')
-    parser.add_argument('--find', '-fi', type=str, help='Search pattern in filename we replace')
-    parser.add_argument('--replace', '-rep', type=str, help='Pattern for new filename')
-    
-    parser.add_argument('--hash', '-H', action='store_false', default=True, help='Recovery file stores checksum')
-    parser.add_argument('--recover', type=str, help='Recover from recovery file')
-
-    args = parser.parse_args()
-    return clean_arguments(args)
-
-def clean_arguments(args):
-    if args.recover:
-        recover(args.recover)
-        sys.exit()
-    
-    if is_arg_empty(args.root) or is_arg_empty(args.find) or args.replace is None:
-        print(f'root, find and replace is required.\nExiting..')
-        sys.exit()
-
-    if args.filetype:
-        args.filetype = args.filetype.split()
-    
-    return args
-
 # Gets all files that matches filename & filetypes
 def get_files(root, recursive, filename, filetypes):
     files = []
@@ -170,6 +158,7 @@ def get_files(root, recursive, filename, filetypes):
                     files.append(filepath)
     return files
 
+""" ***** FILE CHECKS/HANDLING ***** """
 # Checks if filename is in filepath
 def file_match(filepath, filename):
     if filename is None:
@@ -188,6 +177,7 @@ def check_filetype(filepath, filetypes):
         return True
     return filetype in filetypes
 
+# Gets new filename
 def get_new_filename(old_filepath, replace_pattern, pattern, index):
     extension = os.path.splitext(old_filepath)[1]
     filename = os.path.basename(old_filepath)
@@ -233,6 +223,7 @@ def change_filename(old_filepath, new_filepath, hash):
         print(e)
         return False
 
+# Undos all file changes
 def recover_filenames(file_changes):
     success = 0
     failed = 0
@@ -274,11 +265,32 @@ def get_json_filename(filename):
         i += 1
     return f'{filename}{str(i)}.json'
 
-# Checks if argument is empty
-def is_arg_empty(value):
-    if value is None or value == '':
-        return True
-    return False
+""" ***** RECOVERY ***** """
+# Recovers from a recovery file
+def recover(recovery_file):
+    print(f'Recover from file: {recovery_file}')
+    print('Parsing recovery file')
+    
+    file_changes = parse_recovery_file(recovery_file)
+    print(f'Found {len(file_changes)} file changes')
+    success, failed, failed_recovery = recover_filenames(file_changes)
+    print(f'Successfully recovered {success}')
+    print(f'Failed to recover: {failed}')
+    FileChange.create_recovery_log(failed_recovery)
+
+# Parses a recovery file
+def parse_recovery_file(recovery_file):
+    try:
+        with open(recovery_file) as f:
+            data = json.loads(f.read())
+        
+        file_changes = []
+        file_changes_data = data.get("file_changes")
+        for fc in file_changes_data:
+            file_changes.append(FileChange(fc['filepath'], fc['old_filepath'], fc['checksum']))
+        return file_changes
+    except Exception as e:
+        print(e)
 
 if __name__ == '__main__':
     main()

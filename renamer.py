@@ -90,7 +90,8 @@ def parse_arguments():
     parser.add_argument('--filetype', '-F', type=str, default="*", help='Search filter based on filetype')
     parser.add_argument('--find', '-fi', type=str, help='Search pattern in filename we replace')
     parser.add_argument('--replace', '-rep', type=str, help='Pattern for new filename')
-    
+    parser.add_argument('--case-sensitive', '-C', action='store_true', default=False, help='find is case sensitive')
+
     parser.add_argument('--hash', '-H', action='store_false', default=True, help='Recovery file stores checksum')
     parser.add_argument('--recover', type=str, help='Recover from recovery file')
 
@@ -126,12 +127,12 @@ def main():
     print(f'Running renamer.py with')
     print(f'{args}')
     print(f'Fetching files..')
-    files = get_files(args.root, args.recursive, args.filename, args.filetype)
+    files = get_files(args)
     print(f'Found {len(files)} files')
     
     changes = []
     for filename in files:
-        new_name = get_new_filename(filename, args.find, args.replace, 0)
+        new_name = get_new_filename(filename, args.find, args.replace, args.case_sensitive, len(changes))
         change = change_filename(filename, new_name, args.hash)
         if change:
             changes.append(change)
@@ -141,30 +142,36 @@ def main():
     print(f'Finished')
 
 # Gets all files that matches filename & filetypes
-def get_files(root, recursive, filename, filetypes):
+def get_files(args):
     files = []
-    folder_searched.append(root)
+    folder_searched.append(args.root)
 
-    for file in os.listdir(root):
-        filepath = f'{root}/{file}'
+    for file in os.listdir(args.root):
+        filepath = f'{args.root}/{file}'
         if os.path.isdir(filepath):
-            if recursive is False:
+            if args.recursive is False:
                 continue
             if filepath not in folder_searched:
-                files.extend(get_files(f'{filepath}', recursive, filename, filetypes))
+                files.extend(get_files(f'{filepath}', args.recursive, args.filename, args.filetype))
         else:
-            if check_filetype(filepath, filetypes):
-                if file_match(filepath, filename):
+            if check_filetype(filepath, args.filetype):
+                if file_match(filepath, args.filename, args.case_sensitive):
+                    print(f'file_match: {filepath=}')
                     files.append(filepath)
     return files
 
 """ ***** FILE CHECKS/HANDLING ***** """
 # Checks if filename is in filepath
-def file_match(filepath, filename):
+def file_match(filepath, filename, case_sensitive):
+    print(f'{filename=}')
     if filename is None:
         return True
     try:
-        s = re.search(filename, filepath)
+        if case_sensitive:
+            s = re.search(filename, filepath)
+            print('casesensitive')
+        else:
+            s = re.search(filename, filepath, re.IGNORECASE)
         return False if s is None else True
     except Exception as e:
         print(e)
@@ -178,14 +185,17 @@ def check_filetype(filepath, filetypes):
     return filetype in filetypes
 
 # Gets new filename
-def get_new_filename(old_filepath, replace_pattern, pattern, index):
+def get_new_filename(old_filepath, replace_pattern, pattern, case_sensitive, index):
     extension = os.path.splitext(old_filepath)[1]
     filename = os.path.basename(old_filepath)
     filename = filename[0:-len(extension)]
     path = os.path.dirname(old_filepath)
     
     pattern = filename_increment(pattern, index)
-    new_filename = re.sub(replace_pattern, pattern, filename)
+    if case_sensitive:
+        new_filename = re.sub(replace_pattern, pattern, filename)
+    else:
+        new_filename = re.sub(replace_pattern, pattern, filename, flags=re.IGNORECASE)
 
     return f'{path}/{new_filename}{extension}'
 

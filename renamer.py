@@ -21,7 +21,7 @@ folder_searched = []
         recover: parses recovery file and undo everything that's been done
     
     TODO:
-        Add more options?
+        Make index for numbering filename work properly
         Write more stats: e.g: Checked x files, renamed y files,etc...
 """
 

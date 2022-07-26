@@ -16,13 +16,13 @@ folder_searched = []
         replace: pattern in filename, that we replace
         pattern: pattern for the new filename for the file
         hash: recovery file will store checksum of the file
+        list: list files matching, without doing any changes
 
         recover: parses recovery file and undo everything that's been done
     
     TODO:
-        MAKE RECURSION WORK AGAIN
-        Add more options
-        Add option for re.IGNORECASE
+        Add more options?
+        Write more stats: e.g: Checked x files, renamed y files,etc...
 """
 
 """ ***** CLASSES ***** """
@@ -91,7 +91,8 @@ def parse_arguments():
     parser.add_argument('--filetype', '-F', type=str, default="*", help='Search filter based on filetype')
     parser.add_argument('--find', '-fi', type=str, help='Search pattern in filename we replace')
     parser.add_argument('--replace', '-rep', type=str, help='Pattern for new filename')
-    parser.add_argument('--case-sensitive', '-C', action='store_true', default=False, help='find is case sensitive')
+    parser.add_argument('--case-sensitive', '-C', action='store_true', default=False, help='Find is case sensitive')
+    parser.add_argument('--preview', '-p', action='store_true', default=False, help='Preview changes')
 
     parser.add_argument('--hash', '-H', action='store_false', default=True, help='Recovery file stores checksum')
     parser.add_argument('--recover', type=str, help='Recover from recovery file')
@@ -130,13 +131,21 @@ def main():
     print(f'Fetching files..')
     files = get_files(args.root, args)
     print(f'Found {len(files)} files')
-    
+
     changes = []
+    index = 1
     for filename in files:
-        new_name = get_new_filename(filename, args.find, args.replace, args.case_sensitive, len(changes))
+        new_name = get_new_filename(filename, args.find, args.replace, args.case_sensitive, index)
+        if args.preview:
+            if filename != new_name:
+                fname = os.path.basename(new_name)
+                print(f'{filename} --> {fname}')
+                index += 1
+            continue
         change = change_filename(filename, new_name, args.hash)
         if change:
             changes.append(change)
+            index += 1
     print(f'Made: {len(changes)} changes')
     print(f'Creating recovery file..')
     FileChange.create_recovery_file(args, changes)
@@ -158,20 +167,17 @@ def get_files(root, args):
         else:
             if check_filetype(filepath, args.filetype):
                 if file_match(filepath, args.filename, args.case_sensitive):
-                    print(f'file_match: {filepath=}')
                     files.append(filepath)
     return files
 
 """ ***** FILE CHECKS/HANDLING ***** """
 # Checks if filename is in filepath
 def file_match(filepath, filename, case_sensitive):
-    print(f'{filename=}')
     if filename is None:
         return True
     try:
         if case_sensitive:
             s = re.search(filename, filepath)
-            print('casesensitive')
         else:
             s = re.search(filename, filepath, re.IGNORECASE)
         return False if s is None else True

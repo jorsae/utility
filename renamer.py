@@ -20,6 +20,7 @@ folder_searched = []
         recover: parses recovery file and undo everything that's been done
     
     TODO:
+        MAKE RECURSION WORK AGAIN
         Add more options
         Add option for re.IGNORECASE
 """
@@ -127,7 +128,7 @@ def main():
     print(f'Running renamer.py with')
     print(f'{args}')
     print(f'Fetching files..')
-    files = get_files(args)
+    files = get_files(args.root, args)
     print(f'Found {len(files)} files')
     
     changes = []
@@ -142,17 +143,18 @@ def main():
     print(f'Finished')
 
 # Gets all files that matches filename & filetypes
-def get_files(args):
+def get_files(root, args):
     files = []
-    folder_searched.append(args.root)
+    root = os.path.abspath(root)
+    folder_searched.append(root)
 
-    for file in os.listdir(args.root):
-        filepath = f'{args.root}/{file}'
+    for file in os.listdir(root):
+        filepath = os.path.abspath(f'{root}/{file}')
         if os.path.isdir(filepath):
             if args.recursive is False:
                 continue
             if filepath not in folder_searched:
-                files.extend(get_files(f'{filepath}', args.recursive, args.filename, args.filetype))
+                files.extend(get_files(filepath, args))
         else:
             if check_filetype(filepath, args.filetype):
                 if file_match(filepath, args.filename, args.case_sensitive):

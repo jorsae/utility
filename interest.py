@@ -10,24 +10,20 @@ import operator
         - Contribution Amount (amount putting in at regular interval)
         - Interest rate (2 = 2%, 4.21 = 4.21%, etc)
         - Interest calculated (e.g: daily, weekly, monthly, etc)
-        
-# TODO:
-    Currently does not support ia, to 0%
+        - Output string
+        - Output frequency (how often to print output string)
 """
 
 def __main__():
     args = parse_arguments()
-    print(args)
+    print_arguments(args)
 
     calculate(args)
 
 def calculate(args):
     total = args.start
     args.end, end_days = get_end(args.end)
-    print(f'{args.end=} {end_days=}')
-    
     operator = get_operator(args)
-    print(f'{operator=}')
     
     interest_amount = get_interest_amount(args.interest_amount, args.interest_frequency)
     
@@ -35,7 +31,6 @@ def calculate(args):
     total_interest = 0
     total_contributions = 0
 
-    input('enter to start')
     while True:
         # calculate change/deposit/withdrawal
         if (day % args.contribution_frequency == 0) and day != 0:
@@ -63,6 +58,8 @@ def calculate(args):
         day += 1
     
     o = get_output(args.output, total, total_contributions, total_interest, day)
+    print('-'*30)
+    print('Finished Results:')
     print(o)
 
 
@@ -75,19 +72,35 @@ def parse_arguments():
     parser.add_argument('--contribution-amount', '-ca', type=int, required=True, help='How much money is put in')
     parser.add_argument('--contribution-frequency', '-cf', type=int, required=True, help='How often money is put in')
     
-    parser.add_argument('--interest-frequency', '-if', type=int, required=True, help='How often interest is calculated')
     parser.add_argument('--interest-amount', '-ia', type=float, required=True, help='How much interest is calculated')
+    parser.add_argument('--interest-frequency', '-if', type=int, required=True, help='How often interest is calculated')
 
     parser.add_argument('--output', '-o', type=str, default='[%d] Total: %t\tContributions: %c\tInterest: %i\t', help='Output format string')
     parser.add_argument('--output-frequency', '-of', type=int, default=1, help='How often to print output')
     return parser.parse_args()
 
+def print_arguments(args):
+    end, end_days = get_end(args.end)
+    if end_days:
+        print(f'Starting with ${args.start:,} for {end:,} days')
+    else:
+        print(f'Starting with ${args.start:,} till reaching ${end:,}')
+    print(f'Contributing ${args.contribution_amount:,}, every {args.contribution_frequency} days')
+    print(f'Interest: {args.interest_amount}%, calculated every {args.interest_frequency} days at {get_interest_amount(args.interest_amount, args.interest_frequency)}x')
+    print('-'*30)
+
 def get_output(output, total, contributions, interest, day):
     out = output
     out = out.replace('%d', str(day))
-    out = out.replace('%t', str(round(total, 2)))
-    out = out.replace('%c', str(round(contributions, 2)))
-    out = out.replace('%i', str(round(interest, 2)))
+    
+    total = f'{round(total, 2):,}'
+    out = out.replace('%t', total)
+    
+    contributions = f'{round(contributions, 2):,}'
+    out = out.replace('%c', contributions)
+    
+    interest = f'{round(interest, 2):,}'
+    out = out.replace('%i', interest)
     return out
 
 def get_end(end):

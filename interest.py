@@ -6,16 +6,15 @@ import operator
     Arguments:
         - Start balance
         - End balance (e.g: 0 or x amount)
-        - Change (Putting in x every week/month/year)
-        - Change Amount (amount putting in at regular interval)
+        - Contribution (Putting in x every week/month/year)
+        - Contribution Amount (amount putting in at regular interval)
         - Interest rate (2 = 2%, 4.21 = 4.21%, etc)
         - Interest calculated (e.g: daily, weekly, monthly, etc)
         
 # TODO:
     Currently does not support ia, to 0%
-    Clean up output. Have args for how output should be formatted.
-    args -o for outputfile?
 """
+
 def __main__():
     args = parse_arguments()
     print(args)
@@ -23,7 +22,7 @@ def __main__():
     calculate(args)
 
 def calculate(args):
-    current = args.start
+    total = args.start
     args.end, end_days = get_end(args.end)
     print(f'{args.end=} {end_days=}')
     
@@ -32,35 +31,39 @@ def calculate(args):
     
     interest_amount = get_interest_amount(args.interest_amount, args.interest_frequency)
     
-    counter = 0
+    day = 0
     total_interest = 0
-    total_change = 0
+    total_contributions = 0
 
     input('enter to start')
     while True:
         # calculate change/deposit/withdrawal
-        if (counter % args.change_frequency == 0):
-            s_current = current
-            current += args.change_amount
-            total_change += current - s_current
+        if (day % args.contribution_frequency == 0) and day != 0:
+            s_current = total
+            total += args.contribution_amount
+            total_contributions += total - s_current
         
         # Calculate interest
-        if (counter % args.interest_frequency == 0):
-            s_current = current
-            current *= interest_amount
-            total_interest += current - s_current
+        if (day % args.interest_frequency == 0) and day != 0:
+            s_current = total
+            total *= interest_amount
+            total_interest += total - s_current
         
         # Check if end is reached
         if end_days:
-            if counter > args.end:
+            if day > args.end:
                 break
         else:
-            if operator(args.end, current):
+            if operator(args.end, total):
                 break
-        print(f'{current=} | {counter=}')
-        counter += 1
-    print(f'{total_change=}')
-    print(f'{total_interest=}')
+        
+        # Check if need to print output
+        if (day % args.output_frequency == 0) and day != 0:
+            print(get_output(args.output, total, total_contributions, total_interest, day))
+        day += 1
+    
+    o = get_output(args.output, total, total_contributions, total_interest, day)
+    print(o)
 
 
 """ ***** ARGUMENTS ***** """
@@ -69,12 +72,23 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--start', '-s', type=int, required=True, help='Start Balance')
     parser.add_argument('--end', '-e', type=str, required=True, help='End balance/days')
-    parser.add_argument('--change-amount', '-ca', type=int, required=True, help='How much money is put in')
-    parser.add_argument('--change-frequency', '-cf', type=int, required=True, help='How often money is put in')
+    parser.add_argument('--contribution-amount', '-ca', type=int, required=True, help='How much money is put in')
+    parser.add_argument('--contribution-frequency', '-cf', type=int, required=True, help='How often money is put in')
     
     parser.add_argument('--interest-frequency', '-if', type=int, required=True, help='How often interest is calculated')
     parser.add_argument('--interest-amount', '-ia', type=float, required=True, help='How much interest is calculated')
+
+    parser.add_argument('--output', '-o', type=str, default='[%d] Total: %t\tContributions: %c\tInterest: %i\t', help='Output format string')
+    parser.add_argument('--output-frequency', '-of', type=int, default=1, help='How often to print output')
     return parser.parse_args()
+
+def get_output(output, total, contributions, interest, day):
+    out = output
+    out = out.replace('%d', str(day))
+    out = out.replace('%t', str(round(total, 2)))
+    out = out.replace('%c', str(round(contributions, 2)))
+    out = out.replace('%i', str(round(interest, 2)))
+    return out
 
 def get_end(end):
     end_days = True if end.endswith('d') else False

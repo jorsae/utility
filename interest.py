@@ -58,9 +58,10 @@ def calculate(args):
         day += 1
     
     o = get_output(args.output, total, total_contributions, total_interest, day)
+    print(o)
     print('-'*30)
     print('Finished Results:')
-    print(o)
+    print_recap(args, day, total, total_interest, total_contributions)
 
 
 """ ***** ARGUMENTS ***** """
@@ -78,6 +79,31 @@ def parse_arguments():
     parser.add_argument('--output', '-o', type=str, default='[%d] Total: %t\tContributions: %c\tInterest: %i\t', help='Output format string')
     parser.add_argument('--output-frequency', '-of', type=int, default=1, help='How often to print output')
     return parser.parse_args()
+
+def print_recap(args, day, total, total_interest, total_contributions):
+    if args.start > total:
+        total_interest_percent = abs(total_interest / args.start * 100)
+    else:
+        total_interest_percent = abs(total_interest / total * 100)
+    contribution_interest = abs(total_interest / total_contributions * 100)
+    
+    print(get_time_passed(day))
+    print(f'Interest of total: {round(total_interest_percent, 2)}%')
+    print(f'Interest of contributions: {round(contribution_interest, 2)}%')
+
+def get_time_passed(day):
+    years = day // 365
+    months = (day - (years * 365)) // 30
+    days = (day - (years * 365) - (months * 30))
+    output = ''
+
+    if years:
+        output += f'{years} years, '
+    if months:
+        output += f'{months} months, '
+    if days:
+        output += f'{days} days'
+    return output
 
 def print_arguments(args):
     end, end_days = get_end(args.end)

@@ -12,6 +12,24 @@ import operator
         - Interest calculated (e.g: daily, weekly, monthly, etc)
         - Output string
         - Output frequency (how often to print output string)
+
+         Calculate time
+
+            A = Accrued amount (principal + interest)
+            P = Principal amount
+            r = Annual nominal interest rate as a decimal
+            R = Annual nominal interest rate as a percent
+            r = R/100
+            n = number of compounding periods per unit of time
+            t = time in decimal years; e.g., 6 months is calculated as 0.5 years. Divide your partial year number of months by 12 to get the decimal years.
+            I = Interest amount
+            ln = natural logarithm, used in formulas below
+
+
+            Solve for t
+            ln is the natural logarithm
+            t = ln(A/P) / n(ln(1 + r/n)), then also
+            t = (ln(A) - ln(P)) / n(ln(1 + r/n))
 """
 
 def __main__():
@@ -119,13 +137,13 @@ def get_output(output, total, contributions, interest, day):
     out = output
     out = out.replace('%d', str(day))
     
-    total = f'{round(total, 2):,}'
+    total = f'${round(total, 2):,}'
     out = out.replace('%t', total)
     
-    contributions = f'{round(contributions, 2):,}'
+    contributions = f'${round(contributions, 2):,}'
     out = out.replace('%c', contributions)
     
-    interest = f'{round(interest, 2):,}'
+    interest = f'${round(interest, 2):,}'
     out = out.replace('%i', interest)
     return out
 

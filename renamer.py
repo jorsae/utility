@@ -92,6 +92,7 @@ def parse_arguments():
     parser.add_argument('--find', '-fi', type=str, help='Search pattern in filename we replace')
     parser.add_argument('--replace', '-rep', type=str, help='Pattern for new filename')
     parser.add_argument('--case-sensitive', '-C', action='store_true', default=False, help='Find is case sensitive')
+    parser.add_argument('--sort', '-s', action='store_true', default=False, help='Sorts file by filename')
     parser.add_argument('--preview', '-p', action='store_true', default=False, help='Preview changes')
 
     parser.add_argument('--hash', '-H', action='store_false', default=True, help='Recovery file stores checksum')
@@ -130,6 +131,8 @@ def main():
     print(f'{args}')
     print(f'Fetching files..')
     files = get_files(args.root, args)
+    if args.sort:
+        files.sort()
     print(f'Found {len(files)} files')
 
     changes = []

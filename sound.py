@@ -27,6 +27,7 @@ def get_filename(url):
 
 
 def download(filename, url):
+    print(f"Downloading {url}")
     audio = requests.get(url)
     with open(f"{filename}.m4a", "wb") as f:
         f.write(audio.content)

@@ -33,7 +33,7 @@ def download(filename, url):
 
 def get_filename(r):
     html = bs4.BeautifulSoup(r.text, "lxml")
-    return f"{str(html.title)[7:-14]}.mp3"
+    return f"{str(html.title)[7:-15]}"
 
 
 def get_audio_url(r):

@@ -19,9 +19,11 @@ def main():
     whyp = is_whyp(url)
     if whyp:
         filename = get_filename_whyp(req)
+        filename = filename.replace("/", "")
         audio_url = get_audio_url_whyp(req)
     else:
         filename = get_filename(req)
+        filename = filename.replace("/", "")
         audio_url = get_audio_url(req)
     download(filename, audio_url, whyp)
     print("\nDownload completed")

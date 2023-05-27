@@ -25,7 +25,7 @@ def main():
         filename = get_filename(req)
         filename = filename.replace("/", "")
         audio_url = get_audio_url(req)
-    download(filename, audio_url, whyp)
+    download(f"{filename}.m4a", audio_url, whyp)
     print("\nDownload completed")
 
 

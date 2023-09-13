@@ -18,6 +18,7 @@ def main():
 
     whyp = is_whyp(url)
     if whyp:
+        print("Don't think Whyp works anymore. refere seems to be the cdn url and somethign else is broken, prob html regex")
         filename = get_filename_whyp(req)
         filename = filename.replace("/", "")
         audio_url = get_audio_url_whyp(req)
